@@ -1,0 +1,19 @@
+{
+  "name": "lssc-assessment-portal",
+  "version": "2.1.0",
+  "private": true,
+  "description": "SCALE INDIA — Leather Sector Skill Council assessment portal (admin panel + assessor portal)",
+  "scripts": {
+    "dev": "serve -l 3000 .",
+    "start": "serve -l 3000 ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.637.0",
+    "@aws-sdk/s3-request-presigner": "^3.637.0",
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.6"
+  },
+  "engines": { "node": ">=18" }
+}

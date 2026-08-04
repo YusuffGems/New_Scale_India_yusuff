@@ -1,0 +1,380 @@
+// SCALE INDIA — Assessment Management Portal
+// Prisma schema · PostgreSQL (Supabase)
+// npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")       // pooled (pgbouncer) connection
+  directUrl = env("DIRECT_URL")         // direct connection for migrations
+}
+
+// ─────────────────────────── Access control ───────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  ASSESSOR
+}
+
+model User {
+  id           String       @id @default(uuid()) @db.Uuid   // matches auth.users.id
+  email        String       @unique
+  fullName     String
+  mobile       String?
+  role         Role         @default(ADMIN)
+  isActive     Boolean      @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  assessorProfile Assessor?
+  auditLogs       AuditLog[]
+
+  @@index([role, isActive])
+  @@map("users")
+}
+
+// ─────────────────────────── Masters ───────────────────────────
+
+model State {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  code      String     @unique
+  districts District[]
+  @@map("states")
+}
+
+model District {
+  id      String @id @default(cuid())
+  name    String
+  stateId String
+  state   State  @relation(fields: [stateId], references: [id])
+
+  partners TrainingPartner[]
+  centres  TrainingCentre[]
+
+  @@unique([stateId, name])
+  @@map("districts")
+}
+
+model Scheme {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  fundingBody String?
+  isActive    Boolean      @default(true)
+  assessments Assessment[]
+  candidates  Candidate[]
+  @@map("schemes")
+}
+
+model JobRole {
+  id         String        @id @default(cuid())
+  code       String        @unique              // LSS/Q0301
+  name       String
+  nsqfLevel  Int
+  sector     String        @default("Leather")
+  isActive   Boolean       @default(true)
+
+  questionPapers QuestionPaper[]
+  assessments    Assessment[]
+  candidates     Candidate[]
+
+  @@map("job_roles")
+}
+
+model TrainingPartner {
+  id         String   @id @default(cuid())
+  code       String   @unique                   // TP001
+  name       String
+  spocName   String?
+  spocMobile String?
+  spocEmail  String?
+  districtId String?
+  district   District? @relation(fields: [districtId], references: [id])
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  centres     TrainingCentre[]
+  assessments Assessment[]
+  candidates  Candidate[]
+
+  @@map("training_partners")
+}
+
+model TrainingCentre {
+  id         String  @id @default(cuid())
+  code       String  @unique                    // TC1001
+  name       String
+  address    String
+  pincode    String?
+  latitude   Float?
+  longitude  Float?
+  geofenceM  Int     @default(200)              // allowed GPS radius in metres
+  capacity   Int     @default(30)
+  isActive   Boolean @default(true)
+
+  partnerId  String
+  partner    TrainingPartner @relation(fields: [partnerId], references: [id])
+  districtId String?
+  district   District?       @relation(fields: [districtId], references: [id])
+
+  assessments Assessment[]
+  candidates  Candidate[]
+
+  @@map("training_centres")
+}
+
+model Assessor {
+  id            String   @id @default(cuid())
+  code          String   @unique                // AS-1187
+  name          String
+  mobile        String
+  email         String   @unique
+  approvedRoles String[]                        // job role codes
+  stateId       String?
+  status        String   @default("ACTIVE")     // ACTIVE | ON_LEAVE | SUSPENDED
+  totalDone     Int      @default(0)
+
+  userId String? @unique @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id])
+
+  assessments Assessment[]
+
+  @@map("assessors")
+}
+
+// ─────────────────────────── Question papers ───────────────────────────
+
+model QuestionPaper {
+  id               String  @id @default(cuid())
+  qpCode           String                          // LSS/Q0301_v3.0
+  version          String
+  qualificationPack String
+  nsqfLevel        Int
+  theoryMarks      Int
+  practicalMarks   Int
+  passPercent      Int     @default(50)
+
+  qpFileKey        String?                         // R2 object keys
+  checklistFileKey String?
+  guidelineFileKey String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  jobRoleId String
+  jobRole   JobRole @relation(fields: [jobRoleId], references: [id])
+
+  assessments Assessment[]
+
+  @@unique([qpCode, version])
+  @@map("question_papers")
+}
+
+// ─────────────────────────── Candidates ───────────────────────────
+
+model Candidate {
+  id             String   @id @default(cuid())
+  candidateCode  String   @unique                 // CAN250100
+  name           String
+  gender         String
+  dob            DateTime?
+  aadhaarLast4   String?                          // never store the full number
+  mobile         String
+  email          String?
+  batchId        String
+  assessmentType String   @default("BOTH")        // THEORY | PRACTICAL | BOTH
+  status         String   @default("ELIGIBLE")    // ELIGIBLE | PENDING | REJECTED
+  createdAt      DateTime @default(now())
+
+  partnerId String
+  partner   TrainingPartner @relation(fields: [partnerId], references: [id])
+  centreId  String
+  centre    TrainingCentre  @relation(fields: [centreId], references: [id])
+  jobRoleId String
+  jobRole   JobRole         @relation(fields: [jobRoleId], references: [id])
+  schemeId  String?
+  scheme    Scheme?         @relation(fields: [schemeId], references: [id])
+
+  attendance  Attendance[]
+  results     Result[]
+
+  @@index([batchId])
+  @@index([partnerId, centreId])
+  @@map("candidates")
+}
+
+// ─────────────────────────── Assessment ───────────────────────────
+
+enum AssessmentStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AssessmentType {
+  THEORY
+  PRACTICAL
+  BOTH
+}
+
+model Assessment {
+  id             String           @id @default(cuid())
+  assessmentKey  String           @unique          // LSSC-20260803-AX91K
+  publicUrl      String?
+  batchId        String
+  awardingBody   String           @default("Leather Sector Skill Council")
+  assessmentDate DateTime
+  startTime      String
+  endTime        String
+  type           AssessmentType   @default(BOTH)
+  status         AssessmentStatus @default(DRAFT)
+  totalCandidates Int             @default(0)
+  eligibleCandidates Int          @default(0)
+
+  // capture at start
+  gpsLat       Float?
+  gpsLng       Float?
+  gpsAccuracy  Float?
+  gpsCapturedAt DateTime?
+
+  centrePhotoKey String?
+  selfieKey      String?
+
+  theoryChecklist    Json?
+  practicalChecklist Json?
+  remarks            String?
+
+  isLocked    Boolean   @default(false)
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  partnerId String
+  partner   TrainingPartner @relation(fields: [partnerId], references: [id])
+  centreId  String
+  centre    TrainingCentre  @relation(fields: [centreId], references: [id])
+  jobRoleId String
+  jobRole   JobRole         @relation(fields: [jobRoleId], references: [id])
+  qpId      String?
+  qp        QuestionPaper?  @relation(fields: [qpId], references: [id])
+  assessorId String
+  assessor   Assessor       @relation(fields: [assessorId], references: [id])
+  schemeId  String?
+  scheme    Scheme?         @relation(fields: [schemeId], references: [id])
+
+  attendance Attendance[]
+  media      MediaAsset[]
+  results    Result[]
+
+  @@index([status, assessmentDate])
+  @@index([batchId])
+  @@map("assessments")
+}
+
+enum AttendanceMark {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+model Attendance {
+  id           String         @id @default(cuid())
+  mark         AttendanceMark
+  markedAt     DateTime       @default(now())
+  signatureKey String?
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  candidateId  String
+  candidate    Candidate  @relation(fields: [candidateId], references: [id])
+
+  @@unique([assessmentId, candidateId])
+  @@map("attendance")
+}
+
+model Result {
+  id             String  @id @default(cuid())
+  theoryMarks    Float?
+  practicalMarks Float?
+  totalMarks     Float?
+  grade          String?
+  isPass         Boolean @default(false)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  candidateId  String
+  candidate    Candidate  @relation(fields: [candidateId], references: [id])
+
+  @@unique([assessmentId, candidateId])
+  @@map("results")
+}
+
+enum MediaFolder {
+  CENTRE_PHOTO
+  ASSESSOR
+  ATTENDANCE
+  CANDIDATE
+  PHOTOS
+  VIDEOS
+  DOCUMENTS
+}
+
+model MediaAsset {
+  id         String      @id @default(cuid())
+  folder     MediaFolder
+  objectKey  String      @unique          // assessment/<batch>/<folder>/<file>
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  gpsLat     Float?
+  gpsLng     Float?
+  capturedAt DateTime?
+  uploadedAt DateTime    @default(now())
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId, folder])
+  @@map("media_assets")
+}
+
+// ─────────────────────────── System ───────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String?
+  entityId  String?
+  detail    String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  userId String? @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  body      String
+  channel   String   @default("EMAIL")   // EMAIL | SMS | WHATSAPP
+  isRead    Boolean  @default(false)
+  targetId  String?
+  createdAt DateTime @default(now())
+
+  @@index([isRead, createdAt])
+  @@map("notifications")
+}
