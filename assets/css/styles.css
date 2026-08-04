@@ -543,7 +543,29 @@ tbody tr:hover {
   font-size: 15px
 }
 
+
 /* ---------- login ---------- */
+/* ---------- Login logo ---------- */
+.login-art .seal {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.login-logo {
+  display: block;
+  width: 72px;
+  height: 72px;
+  max-width: 72px;
+  max-height: 72px;
+  object-fit: contain;
+  background: #fff;
+  padding: 8px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+  flex-shrink: 0;
+}
 
 /* ---------- Sidebar Logo ---------- */
 .side-head {
