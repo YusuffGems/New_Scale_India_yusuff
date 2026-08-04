@@ -179,13 +179,6 @@ function downloadCandidateTemplate() {
   XLSX.writeFile(wb, 'LSSC_Bulk_Upload_Template.xlsx');
 }
 
-/* ---------------- state for the wizard ---------------- */
-let IMP = { rows: [], headers: [], map: {}, fixed: {} };
-
-/* Kept for compatibility — the importer with column mapping
-   lives in js/mapping.js. */
-function openBulkUpload(targetBatchId) { openImporter(targetBatchId); }
-
 /* ============================================================
    EXCEL / PDF / CSV
    ============================================================ */
