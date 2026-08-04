@@ -17,7 +17,11 @@ function renderAdmin(page) {
   <div id="admin">
     <aside class="side" id="side">
       <div class="side-head">
-        <div class="seal" style="width:40px;height:40px;border-radius:12px;font-size:15px">SI</div>
+        <img
+          src="assets/images/logo.png"
+        
+          
+        >
         <div><b>${CONFIG.platform}</b><small>${CONFIG.orgName}</small></div>
       </div>
       <nav>${ADMIN_MENU.map(([g, items]) => `

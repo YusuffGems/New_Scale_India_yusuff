@@ -9,49 +9,112 @@ let LOGIN_MODE = 'ADMIN';   // ADMIN | ASSESSOR
 
 function renderLogin() {
   stopCamera();
+
   $('#root').innerHTML = `
   <div id="login">
+
     <div class="login-art">
-      <div>
-        <div class="seal">SI</div>
+
+      <!-- Logo -->
+      <div class="seal">
+        <img
+          src="assets/images/logo.png"
+          alt="Leather Sector Skill Council"
+          class="login-logo"
+        >
+      </div>
+
+      <!-- Tagline -->
+      <div class="login-text">
         <h1>${t('tagline')}</h1>
         <p>${t('blurb')}</p>
       </div>
+
+      <!-- Statistics -->
       <div class="art-stats">
-        <div><b>${DB.batches.length}</b><span>${t('batches')}</span></div>
-        <div><b>${DB.candidates.length}</b><span>${t('candidates')}</span></div>
-        <div><b>${DB.assessors.length}</b><span>${t('assessors')}</span></div>
-        <div><b>${DB.questionPapers.length}</b><span>${t('questionPapers')}</span></div>
+        <div>
+          <b>${DB.batches.length}</b>
+          <span>${t('batches')}</span>
+        </div>
+
+        <div>
+          <b>${DB.candidates.length}</b>
+          <span>${t('candidates')}</span>
+        </div>
+
+        <div>
+          <b>${DB.assessors.length}</b>
+          <span>${t('assessors')}</span>
+        </div>
+
+        <div>
+          <b>${DB.questionPapers.length}</b>
+          <span>${t('questionPapers')}</span>
+        </div>
       </div>
+
     </div>
 
     <div class="login-form">
+
       <div class="login-box">
+
         <div class="spread" style="margin-bottom:14px">
           <span class="eyebrow">${CONFIG.platform} · LSSC</span>
           ${langSwitch(true)}
         </div>
-        <h2 style="font-size:26px;margin-bottom:4px">${t('portal')}</h2>
+
+        <h2 style="font-size:26px;margin-bottom:4px">
+          ${t('portal')}
+        </h2>
+
         <p class="muted">${CONFIG.orgName}</p>
 
         <div class="role-tabs">
-          <button class="${LOGIN_MODE === 'ADMIN' ? 'on' : ''}" onclick="setLoginMode('ADMIN')">${t('adminLogin')}</button>
-          <button class="${LOGIN_MODE === 'ASSESSOR' ? 'on' : ''}" onclick="setLoginMode('ASSESSOR')">${t('assessorLogin')}</button>
+          <button class="${LOGIN_MODE === 'ADMIN' ? 'on' : ''}"
+            onclick="setLoginMode('ADMIN')">
+            ${t('adminLogin')}
+          </button>
+
+          <button class="${LOGIN_MODE === 'ASSESSOR' ? 'on' : ''}"
+            onclick="setLoginMode('ASSESSOR')">
+            ${t('assessorLogin')}
+          </button>
         </div>
 
         <div id="loginFields"></div>
-        <button class="btn lg block" id="btnLogin">${t('signIn')}</button>
+
+        <button class="btn lg block" id="btnLogin">
+          ${t('signIn')}
+        </button>
 
         <div class="card" style="padding:12px;margin-top:16px;font-size:12px">
-          <b style="display:block;margin-bottom:4px">Demo sign-in</b>
-          <div class="muted">Super Admin — <span class="mono">lssc@leatherssc.org</span> / <span class="mono">Chennai@32</span></div>
-          <div class="muted">Assessor — <span class="mono">AS-1187</span> / <span class="mono">Assessor@123</span></div>
+          <b style="display:block;margin-bottom:4px">
+            Demo Sign In
+          </b>
+
+          <div class="muted">
+            Super Admin —
+            <span class="mono">lssc@leatherssc.org</span> /
+            <span class="mono">Chennai@32</span>
+          </div>
+
+          <div class="muted">
+            Assessor —
+            <span class="mono">AS-1187</span> /
+            <span class="mono">Assessor@123</span>
+          </div>
+
         </div>
+
       </div>
+
     </div>
+
   </div>`;
 
   drawLoginFields();
+
 }
 
 function setLoginMode(m) { LOGIN_MODE = m; renderLogin(); }

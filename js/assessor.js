@@ -33,7 +33,15 @@ function assessorHome(tab) {
 
   $('#root').innerHTML = `
   <div id="assessor">
-    <div class="a-top">
+   <div class="a-top">
+
+    <div style="text-align:center;margin-bottom:15px;">
+        <img src="assets/images/logo.png"
+             alt="LSSC Logo"
+             class="assessor-logo">
+    </div>
+
+   
       <div class="spread">
         <div>
           <span class="eyebrow" style="color:#9FC0EE">${CONFIG.platform} · LSSC</span>
