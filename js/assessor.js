@@ -33,26 +33,19 @@ function assessorHome(tab) {
 
   $('#root').innerHTML = `
   <div id="assessor">
-   <div class="a-top">
-
-    <div style="text-align:center;margin-bottom:15px;">
-        <img src="assets/images/logo.png"
-             alt="LSSC Logo"
-             class="assessor-logo">
-    </div>
-
-   
-      <div class="spread">
-        <div>
-          <span class="eyebrow" style="color:#9FC0EE">${CONFIG.platform} · LSSC</span>
-          <b style="display:block;margin-top:3px">${esc(me.name)}</b>
-          <span class="mono" style="font-size:11.5px;color:#BBD5FA">${DB.session.id}</span>
+    <div class="a-top">
+      <div class="a-brand">
+        <img src="assets/images/logo.png" alt="${CONFIG.orgName}" class="assessor-logo">
+        <div class="a-brand-text">
+          <span class="eyebrow">${CONFIG.platform} · LSSC</span>
+          <b>${esc(me.name)}</b>
+          <span class="mono a-sub">${DB.session.id}</span>
         </div>
-        ${langSwitch(false)}
+        <div class="a-brand-lang">${langSwitch(false)}</div>
       </div>
-      <div class="spread" style="margin-top:12px">
-        <span style="font-size:12.5px;color:#BBD5FA">${t('myAssessments')}</span>
-        <button class="btn ghost" style="padding:6px 12px;font-size:12px" onclick="logout()">${t('signOut')}</button>
+      <div class="a-toolrow">
+        <span class="a-sub">${t('myAssessments')}</span>
+        <button class="btn ghost a-exit" onclick="logout()">${t('signOut')}</button>
       </div>
     </div>
 
@@ -94,7 +87,7 @@ function batchCards(list, emptyMsg) {
       <b style="font-family:var(--display);font-size:15px;display:block">${esc(b.jobRole)}</b>
       <div class="muted" style="font-size:12.5px;margin:3px 0 10px">${b.qpCode} · ${esc(b.centreName)}</div>
       <div class="row wrap" style="margin-bottom:12px">
-        <span class="pill ${overdue ? 'red' : 'blue'}">${fmtDate(b.assessmentDate)}</span>
+        <span class="pill ${overdue ? 'red' : 'blue'}">${fmtDate(b.assessmentDate)}${b.assessmentEndDate && b.assessmentEndDate !== b.assessmentDate ? ' → ' + fmtDate(b.assessmentEndDate) : ''}</span>
         <span class="pill grey">${b.startTime}–${b.endTime}</span>
         <span class="pill grey">${p.total} ${t('candidates')}</span>
         ${b.isLocked ? `<span class="pill green">${p.present} ${t('present')}</span><span class="pill red">${p.absent} ${t('absent')}</span>`
@@ -224,16 +217,18 @@ function aShell(body, foot) {
   $('#root').innerHTML = `
   <div id="assessor">
     <div class="a-top">
-      <div class="spread">
-        <div>
-          <span class="eyebrow" style="color:#9FC0EE">${CONFIG.platform} · LSSC</span>
-          <b style="display:block;margin-top:3px">${esc(assessorName(b.assessorId))}</b>
+      <div class="a-brand">
+        <img src="assets/images/logo.png" alt="${CONFIG.orgName}" class="assessor-logo">
+        <div class="a-brand-text">
+          <span class="eyebrow">${CONFIG.platform} · LSSC</span>
+          <b>${esc(assessorName(b.assessorId))}</b>
+          <span class="mono a-sub">${esc(b.centreName)}</span>
         </div>
-        ${langSwitch(false)}
+        <div class="a-brand-lang">${langSwitch(false)}</div>
       </div>
-      <div class="spread" style="margin-top:12px">
-        <span class="mono" style="font-size:12px;color:#BBD5FA">${b.assessmentKey}</span>
-        <button class="btn ghost" style="padding:6px 12px;font-size:12px" onclick="exitAssessor()">${t('exit')}</button>
+      <div class="a-toolrow">
+        <span class="mono a-sub">${b.assessmentKey}</span>
+        <button class="btn ghost a-exit" onclick="exitAssessor()">${t('exit')}</button>
       </div>
     </div>
     <div class="a-body">${body}</div>
@@ -289,7 +284,8 @@ function batchDetailsScreen() {
       <div class="kv"><span>${t('centre')}</span><b>${esc(b.centreName)}</b></div>
       <div class="kv"><span>${t('centreAddress')}</span><b style="font-weight:500;font-size:12px">${esc(b.centreAddress)}</b></div>
       <div class="kv"><span>${t('assessor')}</span><b>${esc(assessorName(b.assessorId))} · ${b.assessorId}</b></div>
-      <div class="kv"><span>${t('assessmentDate')}</span><b>${fmtDate(b.assessmentDate)} · ${b.startTime}–${b.endTime}</b></div>
+      <div class="kv"><span>${t('assessmentDate')}</span><b>${fmtDate(b.assessmentDate)} → ${fmtDate(b.assessmentEndDate || b.assessmentDate)}</b></div>
+      <div class="kv"><span>Time</span><b>${b.startTime} – ${b.endTime}</b></div>
       <div class="kv" style="border:none"><span>${t('totalCandidates')}</span><b>${n}</b></div>
     </div>`,
     `<button class="btn lg block" onclick="AS.step=1;renderAssessor()">${t('startAssessment')} →</button>`);
